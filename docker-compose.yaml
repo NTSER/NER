@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  ner-app:
+    build: .
+    container_name: ner-fastapi
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
