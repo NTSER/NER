@@ -81,9 +81,3 @@ static/
 *.pt
 *.bin
 *.h5
-
-# Docker
-**/.dockerignore
-**/Dockerfile
-docker-compose*.yml
-*.log

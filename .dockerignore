@@ -1,0 +1,25 @@
+# Ignore Python virtual environments
+venv/
+.env/
+__pycache__/
+*.pyc
+
+# Ignore common environment folders
+.env
+.envrc
+.venv
+env/
+ENV/
+env.bak/
+env_backup/
+
+# Ignore git and other VCS files
+.git
+.gitignore
+
+# Ignore Dockerfiles and Compose files if you want (optional)
+docker-compose.yml
+
+# Ignore IDE/editor config files
+.vscode/
+.idea/
