@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Archil's playground</title>
+    <title>Archil's Playground</title>
     <style>
       body {
         font-family: "Segoe UI", sans-serif;
@@ -83,15 +83,51 @@
         padding: 2px 4px;
         border-radius: 4px;
       }
+
+      /* Loading spinner */
+      .spinner {
+        display: none;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .loader {
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #4a90e2;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
+    <script>
+      function showSpinner() {
+        document.getElementById("spinner").style.display = "block";
+      }
+    </script>
   </head>
   <body>
-    <h1>🔍 Archil's playground</h1>
-    <form method="post">
+    <h1>🔍 Archil's Playground</h1>
+    <form method="post" onsubmit="showSpinner()">
       <textarea name="text">{{ text }}</textarea>
       <br />
       <button type="submit">Analyze</button>
     </form>
+
+    <div id="spinner" class="spinner">
+      <div class="loader"></div>
+      <p>Analyzing text...</p>
+    </div>
 
     {% if highlighted_text %}
     <div class="highlighted">{{ highlighted_text | safe }}</div>
