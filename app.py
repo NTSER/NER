@@ -11,15 +11,6 @@ ner = pipeline(
 templates = Jinja2Templates(directory="templates")
 
 
-def build_highlight_spans(text, entities, label):
-    spans = []
-    for ent in entities:
-        start = text.find(ent)
-        if start != -1:
-            spans.append({"start": start, "end": start + len(ent), "label": label})
-    return spans
-
-
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse(
@@ -28,40 +19,63 @@ async def home(request: Request):
     )
 
 
+def build_highlight_spans_from_offsets(entities, label):
+    spans = []
+    for ent in entities:
+        spans.append({"start": ent["start"], "end": ent["end"], "label": label})
+    return spans
+
+
 @app.post("/", response_class=HTMLResponse)
 async def analyze(request: Request, text: str = Form(...)):
     spans = []
 
     ner_results = ner(text)
-    persons = [ent["word"] for ent in ner_results if ent["entity_group"] == "PER"]
-    spans += build_highlight_spans(text, persons, "person")
+    persons = [ent for ent in ner_results if ent["entity_group"] == "PER"]
+    spans += build_highlight_spans_from_offsets(persons, "person")
 
-    emails = re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", text)
-    spans += build_highlight_spans(text, emails, "email")
+    # Email
+    emails = list(re.finditer(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", text))
+    spans += [{"start": m.start(), "end": m.end(), "label": "email"} for m in emails]
 
-    phones = re.findall(r"\+?\d[\d\s\-()]{7,}", text)
-    spans += build_highlight_spans(text, phones, "phone")
+    # Phone
+    phones = list(re.finditer(r"\+?\d[\d\s\-()]{7,}", text))
+    spans += [{"start": m.start(), "end": m.end(), "label": "phone"} for m in phones]
 
-    addresses = re.findall(
-        r"\d{1,5}\s\w+\s\w+|\b(street|road|ave|avenue|boulevard|rd|blvd)\b",
-        text,
-        flags=re.I,
+    # Address
+    addresses = list(
+        re.finditer(
+            r"\d{1,5}\s\w+\s\w+|\b(street|road|ave|avenue|boulevard|rd|blvd)\b",
+            text,
+            flags=re.I,
+        )
     )
-    flattened_addresses = [a[0] if isinstance(a, tuple) else a for a in addresses]
-    spans += build_highlight_spans(text, flattened_addresses, "address")
+    spans += [
+        {"start": m.start(), "end": m.end(), "label": "address"} for m in addresses
+    ]
 
-    ids = re.findall(r"(order|customer|serial)[\s:#\-]*\w+", text, flags=re.I)
-    spans += build_highlight_spans(text, ids, "id")
+    # ID
+    ids = list(re.finditer(r"(order|customer|serial)[\s:#\-]*\w+", text, flags=re.I))
+    spans += [{"start": m.start(), "end": m.end(), "label": "id"} for m in ids]
 
-    credentials = re.findall(r"(username|password|login)[\s:=\-]*\w+", text, flags=re.I)
-    spans += build_highlight_spans(text, credentials, "credentials")
-
-    warranties = re.findall(
-        r"(warranty|ticket|reference)[\s:#\-]*\w+", text, flags=re.I
+    # Credentials
+    credentials = list(
+        re.finditer(r"(username|password|login)[\s:=\-]*\w+", text, flags=re.I)
     )
-    spans += build_highlight_spans(text, warranties, "warranty")
+    spans += [
+        {"start": m.start(), "end": m.end(), "label": "credentials"}
+        for m in credentials
+    ]
 
-    # Sort and merge highlights (non-overlapping)
+    # Warranty
+    warranties = list(
+        re.finditer(r"(warranty|ticket|reference)[\s:#\-]*\w+", text, flags=re.I)
+    )
+    spans += [
+        {"start": m.start(), "end": m.end(), "label": "warranty"} for m in warranties
+    ]
+
+    # Sort and merge highlights
     spans = sorted(spans, key=lambda x: x["start"])
     highlighted_text = ""
     last = 0
