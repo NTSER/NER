@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+transformers
+sentencepiece
+torch
+regex
+pydantic
+jinja2 
+protobuf 
+python-multipart
